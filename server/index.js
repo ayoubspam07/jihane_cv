@@ -7,16 +7,12 @@ import { fileURLToPath } from 'node:url';
 
 const { MONGODB_URI, MONGODB_DB = 'job_tracker', PORT = 3001 } = process.env;
 
-if (!MONGODB_URI) {
-  console.error('Missing MONGODB_URI. Set it in your .env file.');
-  process.exit(1);
-}
-
 const STATUSES = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected'];
 
-const client = new MongoClient(MONGODB_URI);
+const client = MONGODB_URI ? new MongoClient(MONGODB_URI) : null;
 let applications;
 let cvSettings;
+let connectionPromise;
 
 function sanitizeTitle(value) {
   let title = String(value ?? '').trim().replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
@@ -29,16 +25,31 @@ function sanitizeTitle(value) {
 }
 
 async function connect() {
-  await client.connect();
-  const db = client.db(MONGODB_DB);
-  applications = db.collection('applications');
-  cvSettings = db.collection('cv_settings');
-  console.log(`Connected to MongoDB (db: ${MONGODB_DB})`);
+  if (!MONGODB_URI) {
+    throw new Error('Missing MONGODB_URI. Set it in your environment.');
+  }
+  if (!connectionPromise) {
+    connectionPromise = client.connect().then(() => {
+      const db = client.db(MONGODB_DB);
+      applications = db.collection('applications');
+      cvSettings = db.collection('cv_settings');
+      console.log(`Connected to MongoDB (db: ${MONGODB_DB})`);
+    });
+  }
+  return connectionPromise;
 }
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
+app.use(async (_req, res, next) => {
+  try {
+    await connect();
+    next();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 function serialize(doc) {
   return { ...doc, title: sanitizeTitle(doc.title), id: doc._id.toString(), _id: undefined };
@@ -160,22 +171,24 @@ app.put('/api/cv-settings/:key', async (req, res) => {
 });
 
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const distPath = path.join(__dirname, '../dist');
+export default app;
 
-app.use(express.static(distPath));
+if (process.env.VERCEL !== '1') {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const distPath = path.join(__dirname, '../dist');
 
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
-});
-
-
-connect()
-  .then(() => {
-    app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`));
-  })
-  .catch((err) => {
-    console.error('Failed to connect to MongoDB:', err.message);
-    process.exit(1);
+  app.use(express.static(distPath));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
   });
+
+  connect()
+    .then(() => {
+      app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`));
+    })
+    .catch((err) => {
+      console.error('Failed to connect to MongoDB:', err.message);
+      process.exit(1);
+    });
+}
