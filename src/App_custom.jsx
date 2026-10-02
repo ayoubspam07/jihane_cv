@@ -1152,17 +1152,17 @@ function AppCustome() {
   }
 
   async function handleClipboardPaste() {
+    if (cvSaveState === 'saving') return;
     let text;
     try {
       text = await navigator.clipboard.readText();
     } catch {
-      setPasteText('');
-      setPasteOpen(true);
+      setJsonError(locale === 'fr' ? 'Impossible de lire le presse-papiers. Autorisez son accès dans votre navigateur puis réessayez.' : 'Could not read the clipboard. Allow clipboard access in your browser and try again.');
       return;
     }
     setPasteText(text);
     if (!text.trim()) {
-      setPasteOpen(true);
+      setJsonError(locale === 'fr' ? 'JSON invalide : le presse-papiers est vide. Copiez le résultat de l’IA puis réessayez.' : 'Invalid JSON: your clipboard is empty. Copy the AI result and try again.');
       return;
     }
     await handlePaste(text);
@@ -1178,9 +1178,26 @@ function AppCustome() {
         return;
       }
       if (!activeJob) {
-        startApplicationDraft(normalizeResumeData(baseResume, resume), application);
+        const job = {
+          ...(application && typeof application === 'object' && !Array.isArray(application) ? application : {}),
+          id: null,
+          title: typeof application?.title === 'string' ? application.title.trim() : '',
+          company: typeof application?.company === 'string' ? application.company.trim() : '',
+          status: 'Saved',
+        };
+        if (!job.title || !job.company) {
+          setJsonError(locale === 'fr' ? 'JSON invalide : ajoutez application.title et application.company au résultat pour enregistrer la candidature.' : 'Invalid JSON: include application.title and application.company to save the application.');
+          return;
+        }
+        const tailoredResume = normalizeResumeData(baseResume, resume);
+        startApplicationDraft(tailoredResume, job);
         setPasteOpen(false);
-        setResumeEditorOpen(true);
+        setResumeEditorOpen(false);
+        const saved = await persistApplicationResume(tailoredResume, {}, job);
+        setJsonError(saved
+          ? (locale === 'fr' ? 'La candidature et son CV ont été enregistrés.' : 'The application and its resume have been saved.')
+          : (locale === 'fr' ? 'La candidature n’a pas été enregistrée. Votre CV reste ouvert ; vérifiez la connexion puis réessayez.' : 'The application was not saved. Your resume remains open; check your connection and try again.'));
+        if (saved) setTimeout(() => setJsonError(''), 3500);
         return;
       }
       const tailoredResume = normalizeResumeData(isCanadaView ? baseCanada : baseResume, resume);
@@ -1258,22 +1275,24 @@ function AppCustome() {
     persistCv();
   }
 
-  async function persistApplicationResume(resume, jobFields = {}) {
-    if (!activeJob) return false;
+  async function persistApplicationResume(resume, jobFields = {}, job = activeJob) {
+    if (!job) return false;
     const fixedResume = normalizeResumeData(isCanadaView ? baseCanada : baseResume, resume);
     setJobResume(fixedResume);
     setCvSaveState('saving');
     try {
-      const res = await fetch(activeJob.id ? `/api/applications/${encodeURIComponent(activeJob.id)}` : '/api/applications', {
-        method: activeJob.id ? 'PATCH' : 'POST',
+      const res = await fetch(job.id ? `/api/applications/${encodeURIComponent(job.id)}` : '/api/applications', {
+        method: job.id ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...activeJob, ...(!activeJob.id ? jobFields : {}), resumeJson: JSON.stringify(fixedResume, null, 2) }),
+        body: JSON.stringify({ ...job, ...(!job.id ? jobFields : {}), resumeJson: JSON.stringify(fixedResume, null, 2) }),
       });
       if (!res.ok) throw new Error('save failed');
       const updated = await res.json();
       setActiveJob(updated);
       setJobResume(fixedResume);
-      setJobList((prev) => prev.map((item) => item.id === updated.id ? updated : item));
+      setJobList((prev) => prev.some((item) => item.id === updated.id)
+        ? prev.map((item) => item.id === updated.id ? updated : item)
+        : [updated, ...prev]);
       setRefreshKey((key) => key + 1);
       setCvSaveState('saved');
       setTimeout(() => setCvSaveState(''), 1500);
