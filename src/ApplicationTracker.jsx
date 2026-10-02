@@ -6,7 +6,7 @@ const STATUSES = ['Saved', 'Applied', 'Interview', 'Offer', 'Rejected'];
 const TEXT = {
   fr: {
     heading: 'Suivi des candidatures',
-    subtitle: 'Enregistrez vos candidatures et le CV utilisé pour chacune.',
+    subtitle: 'Enregistrez vos candidatures. Le CV par défaut est ajouté automatiquement.',
     add: 'Nouvelle candidature',
     title: 'Intitulé du poste',
     company: 'Entreprise',
@@ -22,16 +22,13 @@ const TEXT = {
     delete: 'Supprimer',
     open: 'Voir l’offre',
     required: 'L’intitulé et l’entreprise sont obligatoires.',
-    loadError: 'Impossible de charger les candidatures. Le serveur API est-il démarré ?',
+    loadError: 'Le suivi des candidatures est temporairement indisponible. Vérifiez votre connexion et réessayez.',
+    saveError: 'Votre modification n’a pas été enregistrée. Vérifiez votre connexion puis réessayez ; vos informations sont toujours affichées.',
+    deleteError: 'Cette candidature n’a pas été supprimée. Réessayez dans un instant.',
     search: 'Rechercher un poste ou une entreprise…',
     allStatuses: 'Tous les statuts',
-    from: 'À partir du',
     date: 'Date de candidature',
     noMatch: 'Aucune candidature ne correspond aux filtres.',
-    score: 'Score',
-    scoreAny: 'Tous les scores',
-    scoreGte: '≥ (au moins)',
-    scoreLte: '≤ (au plus)',
     edit: 'Modifier',
     location: 'Localisation',
     contractType: 'Type de contrat',
@@ -44,7 +41,7 @@ const TEXT = {
   },
   en: {
     heading: 'Application Tracker',
-    subtitle: 'Save your applications and the resume you used for each one.',
+    subtitle: 'Save your applications. The default resume is attached automatically.',
     add: 'New application',
     title: 'Job title',
     company: 'Company',
@@ -60,16 +57,13 @@ const TEXT = {
     delete: 'Delete',
     open: 'Open posting',
     required: 'Title and company are required.',
-    loadError: 'Could not load applications. Is the API server running?',
+    loadError: 'Applications are temporarily unavailable. Check your connection and try again.',
+    saveError: 'Your change was not saved. Check your connection and try again; your information is still shown here.',
+    deleteError: 'This application was not deleted. Please try again.',
     search: 'Search by job title or company…',
     allStatuses: 'All statuses',
-    from: 'From',
     date: 'Applied on',
     noMatch: 'No applications match your filters.',
-    score: 'Score',
-    scoreAny: 'Any score',
-    scoreGte: '≥ (at least)',
-    scoreLte: '≤ (at most)',
     edit: 'Edit',
     location: 'Location',
     contractType: 'Contract type',
@@ -87,7 +81,6 @@ const emptyForm = {
   company: '',
   url: '',
   jobDescription: '',
-  resumeJson: '',
   status: 'Saved',
 };
 
@@ -125,8 +118,11 @@ function downloadResume(app) {
   URL.revokeObjectURL(link.href);
 }
 
-function ApplicationForm({ t, onCancel, onSaved }) {
-  const [form, setForm] = useState(emptyForm);
+function ApplicationForm({ t, onCancel, onSaved, defaultResume }) {
+  const [form, setForm] = useState(() => ({
+    ...emptyForm,
+    resumeJson: JSON.stringify(defaultResume, null, 2),
+  }));
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -146,14 +142,14 @@ function ApplicationForm({ t, onCancel, onSaved }) {
       const res = await fetch('/api/applications', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, resumeJson: JSON.stringify(defaultResume, null, 2) }),
       });
       if (!res.ok) throw new Error('save failed');
       const created = await res.json();
       onSaved(created);
-      setForm(emptyForm);
+      setForm({ ...emptyForm, resumeJson: JSON.stringify(defaultResume, null, 2) });
     } catch {
-      setError(t.loadError);
+      setError(t.saveError);
     } finally {
       setSaving(false);
     }
@@ -174,35 +170,7 @@ function ApplicationForm({ t, onCancel, onSaved }) {
           <span>{t.url}</span>
           <input type="url" value={form.url} onChange={(e) => update('url', e.target.value)} placeholder="https://" />
         </label>
-        <label className="trk-field">
-          <span>{t.status}</span>
-          <select value={form.status} onChange={(e) => update('status', e.target.value)}>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
-      <label className="trk-field">
-        <span>{t.jobDescription}</span>
-        <textarea
-          rows={4}
-          value={form.jobDescription}
-          onChange={(e) => update('jobDescription', e.target.value)}
-        />
-      </label>
-      <label className="trk-field">
-        <span>{t.resumeJson}</span>
-        <textarea
-          rows={5}
-          className="trk-mono"
-          value={form.resumeJson}
-          onChange={(e) => update('resumeJson', e.target.value)}
-          placeholder='{ "basics": { ... } }'
-        />
-      </label>
       {error && <p className="trk-error">{error}</p>}
       <div className="trk-form-actions">
         <button type="button" className="trk-btn" onClick={onCancel}>
@@ -216,7 +184,7 @@ function ApplicationForm({ t, onCancel, onSaved }) {
   );
 }
 
-function DetailModal({ t, app, onClose, onStatusChange, onSave, onDelete }) {
+function DetailModal({ t, app, error, onClose, onStatusChange, onSave, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(app);
 
@@ -227,8 +195,7 @@ function DetailModal({ t, app, onClose, onStatusChange, onSave, onDelete }) {
   }
 
   async function save() {
-    await onSave(draft);
-    setEditing(false);
+    if (await onSave(draft)) setEditing(false);
   }
 
   useEffect(() => {
@@ -253,6 +220,7 @@ function DetailModal({ t, app, onClose, onStatusChange, onSave, onDelete }) {
         </header>
 
         <div className="trk-modal-body">
+          {error && <p className="trk-error" role="alert">{error}</p>}
           {editing ? (
             <div className="trk-edit-form">
               <div className="trk-form-grid">
@@ -353,7 +321,7 @@ function DetailModal({ t, app, onClose, onStatusChange, onSave, onDelete }) {
   );
 }
 
-function ApplicationTracker({ locale = 'en', refreshKey = 0, openCandidate = null, onConsumeOpen, onOpenApplication }) {
+function ApplicationTracker({ locale = 'en', defaultResume, refreshKey = 0, onOpenApplication }) {
   const t = TEXT[locale] ?? TEXT.en;
   const [apps, setApps] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -361,9 +329,6 @@ function ApplicationTracker({ locale = 'en', refreshKey = 0, openCandidate = nul
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [dateFrom, setDateFrom] = useState('');
-  const [scoreOp, setScoreOp] = useState('any');
-  const [scoreValue, setScoreValue] = useState('');
 
   async function load() {
     try {
@@ -381,14 +346,6 @@ function ApplicationTracker({ locale = 'en', refreshKey = 0, openCandidate = nul
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
-  useEffect(() => {
-    if (openCandidate) {
-      if (onOpenApplication) onOpenApplication(openCandidate);
-      else setSelected(openCandidate);
-      onConsumeOpen?.();
-    }
-  }, [onConsumeOpen, onOpenApplication, openCandidate]);
-
   function handleSaved(created) {
     setApps((prev) => [created, ...prev]);
     setShowForm(false);
@@ -400,58 +357,60 @@ function ApplicationTracker({ locale = 'en', refreshKey = 0, openCandidate = nul
     const updated = { ...target, status };
     setApps((prev) => prev.map((a) => (a.id === id ? updated : a)));
     setSelected((prev) => (prev && prev.id === id ? updated : prev));
+    setError('');
     try {
-      await fetch(`/api/applications/${id}`, {
+      const response = await fetch(`/api/applications/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updated),
       });
+      if (!response.ok) throw new Error('update failed');
     } catch {
-      setError(t.loadError);
+      setApps((prev) => prev.map((app) => app.id === id ? target : app));
+      setSelected((prev) => (prev && prev.id === id ? target : prev));
+      setError(t.saveError);
     }
   }
 
   async function handleUpdate(updated) {
-    const res = await fetch(`/api/applications/${updated.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated),
-    });
-    if (!res.ok) {
-      setError(t.loadError);
-      return;
+    setError('');
+    try {
+      const res = await fetch(`/api/applications/${updated.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      if (!res.ok) throw new Error('update failed');
+      const saved = await res.json();
+      setApps((prev) => prev.map((app) => app.id === saved.id ? saved : app));
+      setSelected(saved);
+      return true;
+    } catch {
+      setError(t.saveError);
+      return false;
     }
-    const saved = await res.json();
-    setApps((prev) => prev.map((app) => app.id === saved.id ? saved : app));
-    setSelected(saved);
   }
 
   async function handleDelete(id) {
-    setApps((prev) => prev.filter((a) => a.id !== id));
-    setSelected(null);
+    setError('');
     try {
-      await fetch(`/api/applications/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/applications/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('delete failed');
+      setApps((prev) => prev.filter((app) => app.id !== id));
+      setSelected(null);
     } catch {
-      setError(t.loadError);
+      setError(t.deleteError);
     }
   }
 
   const query_ = query.trim().toLowerCase();
-  const scoreThreshold = scoreValue === '' ? null : Number(scoreValue);
   const filtered = apps.filter((a) => {
     const matchesQuery =
       !query_ ||
       a.title.toLowerCase().includes(query_) ||
       a.company.toLowerCase().includes(query_);
     const matchesStatus = statusFilter === 'All' || a.status === statusFilter;
-    const matchesDate = !dateFrom || (a.createdAt && a.createdAt.slice(0, 10) >= dateFrom);
-    let matchesScore = true;
-    if (scoreOp !== 'any' && scoreThreshold !== null && !Number.isNaN(scoreThreshold)) {
-      const s = typeof a.matchScore === 'number' ? a.matchScore : null;
-      if (s === null) matchesScore = false;
-      else matchesScore = scoreOp === 'gte' ? s >= scoreThreshold : s <= scoreThreshold;
-    }
-    return matchesQuery && matchesStatus && matchesDate && matchesScore;
+    return matchesQuery && matchesStatus;
   });
 
   return (
@@ -466,9 +425,9 @@ function ApplicationTracker({ locale = 'en', refreshKey = 0, openCandidate = nul
         </button>
       </header>
 
-      {error && <p className="trk-error">{error}</p>}
+      {error && !selected && <p className="trk-error" role="alert">{error}</p>}
 
-      {showForm && <ApplicationForm t={t} onCancel={() => setShowForm(false)} onSaved={handleSaved} />}
+      {showForm && <ApplicationForm t={t} onCancel={() => setShowForm(false)} onSaved={handleSaved} defaultResume={defaultResume} />}
 
       {apps.length > 0 && (
         <div className="trk-toolbar">
@@ -493,28 +452,6 @@ function ApplicationTracker({ locale = 'en', refreshKey = 0, openCandidate = nul
               </option>
             ))}
           </select>
-          <label className="trk-filter-date">
-            <span>{t.from}</span>
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-          </label>
-          <div className="trk-filter-score">
-            <span>{t.score}</span>
-            <select value={scoreOp} onChange={(e) => setScoreOp(e.target.value)}>
-              <option value="any">{t.scoreAny}</option>
-              <option value="gte">{t.scoreGte}</option>
-              <option value="lte">{t.scoreLte}</option>
-            </select>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              step="5"
-              disabled={scoreOp === 'any'}
-              value={scoreValue}
-              onChange={(e) => setScoreValue(e.target.value)}
-              placeholder="%"
-            />
-          </div>
         </div>
       )}
 
@@ -558,6 +495,7 @@ function ApplicationTracker({ locale = 'en', refreshKey = 0, openCandidate = nul
         <DetailModal
           t={t}
           app={selected}
+          error={error}
           onClose={() => setSelected(null)}
           onStatusChange={handleStatusChange}
           onSave={handleUpdate}

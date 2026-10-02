@@ -6,8 +6,6 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import resumeDataFr from './assets/resumeData_fr.json';
 import resumeDataEn from './assets/resumeData.json';
-import resumeDataCanadaFr from './assets/resumeData_canada_fr.json';
-import resumeDataCanadaEn from './assets/resumeData_canada.json';
 import CanadianCV from './CanadianCV.jsx';
 import ApplicationTracker from './ApplicationTracker.jsx';
 
@@ -17,18 +15,14 @@ function getResumeMeta(locale, page) {
   const isFr = locale === 'fr';
   const isCanada = page === 'canada';
   const pageLabel = isCanada ? (isFr ? 'CV canadien' : 'Canadian CV') : isFr ? 'CV' : 'Resume';
-  const title = `Ayoub Boudra Data Engineer ${pageLabel}`;
+  const title = `Jihane Tioutiou ${pageLabel}`;
   const description = isFr
-    ? `CV d'Ayoub Boudra, Data Engineer spécialisé en pipelines cloud, analytics, BI et cas d'usage IA/ML.${isCanada ? ' Format canadien.' : ''}`
-    : `Resume of Ayoub Boudra, a Data Engineer specialized in cloud data pipelines, analytics, BI and AI/ML use cases.${isCanada ? ' Canadian format.' : ''}`;
+    ? `CV de Jihane Tioutiou, spécialiste senior en marketing et CRM.${isCanada ? ' Format canadien.' : ''}`
+    : `Resume of Jihane Tioutiou, senior marketing and CRM specialist.${isCanada ? ' Canadian format.' : ''}`;
   const keywords = [
-    'Ayoub Boudra',
-    'Data Engineer',
-    'Cloud',
-    'Big Data',
-    'Python',
-    'SQL',
-    'BI',
+    'Jihane Tioutiou',
+    'Marketing',
+    'CRM',
     isFr ? 'CV' : 'Resume',
     isCanada ? 'Canada' : '',
   ]
@@ -171,7 +165,7 @@ Experience:
 - Keep existing quantified results exactly as they are; never fabricate numbers.
 
 Formatting:
-- Set every education[].period to an empty string.
+- Preserve every education[].period exactly as provided, including graduation years.
 
 ## STEP 3 — Extract the job info
 From the job description, extract:
@@ -222,17 +216,6 @@ ${jobOffer.trim() || '(Paste the full job offer here.)'}
 `;
 }
 
-// Creates a job application (candidate) from a resume paste that carries job metadata.
-async function createApplication(payload) {
-  const res = await fetch('/api/applications', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error('create failed');
-  return res.json();
-}
-
 function ActionBar({ locale, onLocaleChange, onDownload }) {
   return (
     <div className="resume_actions" aria-label="Resume actions">
@@ -261,20 +244,26 @@ function ActionBar({ locale, onLocaleChange, onDownload }) {
 }
 
 function Home({ resumeData, showImage = true }) {
+  if (!showImage) return null;
   return (
     <section className="home" id="home">
       <div className="home_container section bd-grid">
         <div className="home_data bd-grid">
-          {showImage && (
-            <img src="/pictures/profile_2.jpg" className="home_img" alt="Ayoub Boudra portrait" />
-          )}
-          <h1 className="home_title">
-            {resumeData.basics.firstName} <b>{resumeData.basics.lastName}</b>
-          </h1>
-          <h3 className="home_profession">{resumeData.basics.title}</h3>
+          <img src="/pictures/profile_2.jpg" className="home_img" alt={`Portrait de ${resumeData.basics.firstName} ${resumeData.basics.lastName}`} />
         </div>
       </div>
     </section>
+  );
+}
+
+function ResumeNameHeader({ resumeData }) {
+  return (
+    <header className="resume_name_header">
+      <h1 className="home_title">
+        {resumeData.basics.firstName} <b>{resumeData.basics.lastName}</b>
+      </h1>
+      <h2 className="home_profession">{resumeData.basics.title}</h2>
+    </header>
   );
 }
 
@@ -332,7 +321,7 @@ function Languages({ resumeData }) {
 }
 
 function Skills({ resumeData }) {
-  const skillGroups = resumeData.skillGroups ?? [];
+  const skillGroups = (resumeData.skillGroups ?? []).filter((group) => group.title !== 'Technology');
 
   return (
     <section className="skills section" id="skills">
@@ -340,7 +329,7 @@ function Skills({ resumeData }) {
       <div className="skills_groups compact_list">
         {skillGroups.map((group) => (
           <div key={group.title} className="skill_group">
-            <h3 className="skill_group_title">{group.title}</h3>
+            {group.title.toLocaleLowerCase() !== (resumeData.labels?.skills ?? '').toLocaleLowerCase() && <h3 className="skill_group_title">{group.title}</h3>}
             <div className="skill_chips">
               {group.items.map((item) => (
                 <span className="skill_chip" key={item}>
@@ -351,6 +340,19 @@ function Skills({ resumeData }) {
           </div>
         ))}
       </div>
+    </section>
+  );
+}
+
+function TechnologySection({ resumeData }) {
+  const technology = (resumeData.skillGroups ?? []).find((group) => group.title === 'Technology');
+  if (!technology?.items?.length) return null;
+  return (
+    <section className="technology section" id="technology">
+      <SectionTitle>{resumeData.labels?.technology ?? 'Technology'}</SectionTitle>
+      <ul className="technology_list">
+        {technology.items.map((item) => <li key={item}>{item}</li>)}
+      </ul>
     </section>
   );
 }
@@ -414,22 +416,15 @@ function EducationSection({ resumeData }) {
       <SectionTitle>{resumeData.labels?.education ?? 'Education'}</SectionTitle>
 
       <div className="education_container bd-grid">
-        {resumeData.education.map((item, index) => (
-          <div className="experience_content" key={`${item.degree}-${item.period}`}>
-            <div className="experience_time">
-              <span className="experience_rounder"></span>
-              {index < resumeData.education.length - 1 && <span className="experience_line"></span>}
-            </div>
-            <div className="experience_data bd-grid">
-              <div className="experience_header">
-                <h3 className="experience_title">{item.degree}</h3>
-              </div>
-              <span className="experience_company">
-                {item.school}
-                {item.location && <span className="experience_location"> — {item.location}</span>}
-              </span>
-            </div>
-          </div>
+        {resumeData.education.map((item) => (
+          <article className="education_item" key={`${item.degree}-${item.period}`}>
+            <h3 className="education_title">{item.degree}</h3>
+            <p className="education_school">{item.school}</p>
+            <p className="education_meta">
+              {item.period && <span className="education_period">{item.period}</span>}
+              {item.location && <span>{item.location}</span>}
+            </p>
+          </article>
         ))}
       </div>
     </section>
@@ -483,18 +478,11 @@ function PageNav({ page, onPageChange, locale }) {
         className={`page_nav_button ${page === 'cv' ? 'is-active' : ''}`}
         onClick={() => onPageChange('cv')}
       >
-        CV
+        {locale === 'fr' ? 'CV' : 'Resume'}
       </button>
       <button
         type="button"
-        className={`page_nav_button ${page === 'canada' ? 'is-active' : ''}`}
-        onClick={() => onPageChange('canada')}
-      >
-        {locale === 'fr' ? 'CV canadien' : 'Canadian CV'}
-      </button>
-      <button
-        type="button"
-        className={`page_nav_button ${page === 'tracker' ? 'is-active' : ''}`}
+        className={`page_nav_button ${page === 'tracker' || page === 'application' ? 'is-active' : ''}`}
         onClick={() => onPageChange('tracker')}
       >
         {locale === 'fr' ? 'Candidatures' : 'Applications'}
@@ -503,113 +491,19 @@ function PageNav({ page, onPageChange, locale }) {
   );
 }
 
-function CandidateSidebar({ locale, open, onToggle, refreshKey, onSelect, onApps, activeId }) {
-  const [apps, setApps] = useState([]);
-  const [error, setError] = useState('');
-  const [companyQuery, setCompanyQuery] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    fetch('/api/applications')
-      .then((r) => {
-        if (!r.ok) throw new Error('load failed');
-        return r.json();
-      })
-      .then((data) => {
-        if (active) {
-          const list = Array.isArray(data) ? data : [];
-          setApps(list);
-          setError('');
-          onApps?.(list);
-        }
-      })
-      .catch(() => {
-        if (active) setError(locale === 'fr' ? 'Hors ligne' : 'Offline');
-      });
-    return () => {
-      active = false;
-    };
-  }, [refreshKey, locale, onApps]);
-
-  const labels = {
-    title: locale === 'fr' ? 'Mes candidatures' : 'My applications',
-    empty: locale === 'fr' ? 'Aucune candidature.' : 'No applications yet.',
-    open: locale === 'fr' ? 'Ouvrir la liste' : 'Open list',
-    close: locale === 'fr' ? 'Réduire la liste' : 'Collapse list',
-    search: locale === 'fr' ? 'Rechercher une entreprise…' : 'Search company…',
-    noMatch: locale === 'fr' ? 'Aucune entreprise trouvée.' : 'No companies found.',
-  };
-  const normalizedCompanyQuery = companyQuery.trim().toLocaleLowerCase();
-  const filteredApps = apps.filter((app) =>
-    !normalizedCompanyQuery || (app.company ?? '').toLocaleLowerCase().includes(normalizedCompanyQuery),
-  );
-
-  return (
-    <aside className={`cand_sidebar ${open ? 'is-open' : 'is-collapsed'}`}>
-      <button
-        type="button"
-        className="cand_sidebar_toggle"
-        onClick={onToggle}
-        aria-label={open ? labels.close : labels.open}
-        aria-expanded={open}
-      >
-        <FontAwesomeIcon icon={['fas', open ? 'angles-left' : 'angles-right']} />
-      </button>
-      {open && (
-        <div className="cand_sidebar_body">
-          <h2 className="cand_sidebar_title">{labels.title}</h2>
-          {apps.length > 0 && (
-            <label className="cand_sidebar_search">
-              <FontAwesomeIcon icon={['fas', 'magnifying-glass']} aria-hidden="true" />
-              <input
-                type="search"
-                value={companyQuery}
-                onChange={(event) => setCompanyQuery(event.target.value)}
-                placeholder={labels.search}
-                aria-label={labels.search}
-              />
-            </label>
-          )}
-          {error && <p className="cand_sidebar_error">{error}</p>}
-          {apps.length === 0 && !error ? (
-            <p className="cand_sidebar_empty">{labels.empty}</p>
-          ) : filteredApps.length === 0 && !error ? (
-            <p className="cand_sidebar_empty">{labels.noMatch}</p>
-          ) : (
-            <ul className="cand_sidebar_list">
-              {filteredApps.map((app) => (
-                <li key={app.id}>
-                  <button
-                    type="button"
-                    className={`cand_sidebar_item ${activeId === app.id ? 'is-active' : ''}`}
-                    onClick={() => onSelect(app)}
-                  >
-                    <span className="cand_sidebar_item_title">{app.title}</span>
-                    <span className="cand_sidebar_item_company">{app.company}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </aside>
-  );
-}
-
 function FloatingTools({ locale, page, onCopy, onPaste, onCopyPrompt, onEditResume }) {
   if (page === 'tracker') return null;
   const tools = [
-    { key: 'copy', icon: 'copy', label: locale === 'fr' ? 'Copier JSON' : 'Copy JSON', action: onCopy },
+    { key: 'edit', icon: 'pen-to-square', label: locale === 'fr' ? 'Modifier le CV' : 'Edit resume', action: onEditResume },
     { key: 'prompt', icon: 'wand-magic-sparkles', label: locale === 'fr' ? 'Prompt IA' : 'AI prompt', action: onCopyPrompt },
-    (page === 'cv' || page === 'application') && { key: 'edit', icon: 'pen-to-square', label: locale === 'fr' ? 'Modifier le CV' : 'Edit resume', action: onEditResume },
-    page === 'cv' && { key: 'paste', icon: 'paste', label: locale === 'fr' ? 'Coller JSON' : 'Paste JSON', action: onPaste },
-  ].filter(Boolean);
-
+    { key: 'paste', icon: 'paste', label: locale === 'fr' ? 'Coller JSON' : 'Paste JSON', action: onPaste },
+    { key: 'copy', icon: 'copy', label: locale === 'fr' ? 'Copier JSON' : 'Copy JSON', action: onCopy },
+  ];
   return (
-    <div className="floating_tools" aria-label={locale === 'fr' ? 'Outils du CV' : 'Resume tools'}>
+    <div className="application-tools" aria-label={locale === 'fr' ? 'Outils du CV de candidature' : 'Application resume tools'}>
+      <strong className="application-tools_label">{locale === 'fr' ? 'Outils du CV' : 'Resume tools'}</strong>
       {tools.map((tool) => (
-        <button key={tool.key} type="button" className="floating_tool_menu_button" onClick={tool.action}>
+        <button key={tool.key} type="button" className="application-tools_button" onClick={tool.action}>
           <FontAwesomeIcon icon={['fas', tool.icon]} />
           <span>{tool.label}</span>
         </button>
@@ -620,7 +514,7 @@ function FloatingTools({ locale, page, onCopy, onPaste, onCopyPrompt, onEditResu
 
 function ActionToast({ message }) {
   if (!message) return null;
-  const isError = /impossible|invalid|invalide|failed|échec|offline|hors ligne/i.test(message);
+  const isError = /impossible|invalid|invalide|failed|échec|offline|hors ligne|not saved|n[’']a pas été|ne ressemble pas/i.test(message);
   return (
     <div className={`action_toast ${isError ? 'is-error' : 'is-success'}`} role={isError ? 'alert' : 'status'} aria-live="polite">
       <FontAwesomeIcon icon={['fas', isError ? 'triangle-exclamation' : 'circle-check']} />
@@ -629,11 +523,12 @@ function ActionToast({ message }) {
   );
 }
 
-const SECTION_ORDER = ['profile', 'contact', 'summary', 'highlights', 'languages', 'skills', 'softSkills', 'experience', 'education', 'certifications'];
+const SECTION_ORDER = ['profile', 'contact', 'skills', 'certifications', 'technology', 'languages', 'summary', 'highlights', 'softSkills', 'experience', 'education'];
 
 const SECTION_COMPONENTS = {
   profile: Home,
   contact: Contact,
+  technology: TechnologySection,
   summary: SummarySection,
   highlights: HighlightsSection,
   languages: Languages,
@@ -649,12 +544,12 @@ const BASE_FONT_PX = 0.82 * 16;
 
 const defaultCvSettings = {
   fontScale: 1,
-  accent: '#12467c',
+  accent: '#171513',
   showImage: true,
-  photoSize: 96,
-  columns: { profile: 'left', contact: 'right', summary: 'right', highlights: 'right', languages: 'left', skills: 'left', softSkills: 'left', experience: 'right', education: 'right', certifications: 'left' },
-  visible: { profile: true, contact: true, summary: true, highlights: true, languages: true, skills: true, softSkills: true, experience: true, education: true, certifications: true },
-  sectionScale: { profile: 1, contact: 1, summary: 1, highlights: 1, languages: 1, skills: 1, softSkills: 1, experience: 1, education: 1, certifications: 1 },
+  photoSize: 144,
+  columns: { profile: 'left', contact: 'left', summary: 'right', highlights: 'right', languages: 'left', skills: 'left', softSkills: 'left', experience: 'right', education: 'right', certifications: 'left', technology: 'left' },
+  visible: { profile: true, contact: true, summary: true, highlights: true, languages: true, skills: true, softSkills: true, experience: true, education: true, certifications: true, technology: true },
+  sectionScale: { profile: 1, contact: 1, summary: 1, highlights: 1, languages: 1, skills: 1, softSkills: 1, experience: 1, education: 1, certifications: 1, technology: 1 },
 };
 
 const CANADA_FIELD_ORDER = ['name', 'title', 'location', 'phone', 'email', 'links', 'summary', 'skills', 'experience', 'education', 'languages'];
@@ -665,8 +560,7 @@ const defaultCanadaSettings = {
   visible: Object.fromEntries(CANADA_FIELD_ORDER.map((key) => [key, true])),
 };
 
-const COLOR_PRESETS = ['#12467c', '#0d3763', '#1f7a44', '#a9761a', '#b23b3b', '#5b3fa0', '#0f766e', '#111827'];
-
+const COLOR_PRESETS = ['#171513', '#7d5a4e', '#315b50', '#9a6b2f', '#8d4141', '#365b83', '#66723d', '#343434'];
 const HEX_RE = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
 function CvCustomizer({
@@ -682,21 +576,22 @@ function CvCustomizer({
 }) {
   const fr = locale === 'fr';
   const isCanada = variant === 'canada';
+  const baseFontPx = isCanada ? 10 * 4 / 3 : BASE_FONT_PX;
   const [hex, setHex] = useState('');
 
   const patch = (next) => onSettingsChange({ ...settings, ...next });
-  const setColumn = (key, col) =>
-    onSettingsChange({ ...settings, columns: { ...settings.columns, [key]: col } });
+  const setColumn = (key, column) =>
+    onSettingsChange({ ...settings, columns: { ...settings.columns, [key]: column } });
   const setVisible = (key, val) =>
     onSettingsChange({ ...settings, visible: { ...settings.visible, [key]: val } });
-  const setSectionScale = (key, val) =>
-    onSettingsChange({ ...settings, sectionScale: { ...settings.sectionScale, [key]: val } });
+  const setSectionScale = (key, scale) =>
+    onSettingsChange({ ...settings, sectionScale: { ...settings.sectionScale, [key]: scale } });
   const setPageMargin = (edge, value) =>
     onSettingsChange({ ...settings, pageMargins: { ...settings.pageMargins, [edge]: value } });
 
   const sectionLabels = fr
-    ? { profile: 'Identité', contact: 'Contact', summary: 'Profil', highlights: 'Points forts', languages: 'Langues', skills: 'Compétences', softSkills: 'Compétences comportementales', experience: 'Expérience', education: 'Formation', certifications: 'Certifications' }
-    : { profile: 'Identity', contact: 'Contact', summary: 'Profile', highlights: 'Highlights', languages: 'Languages', skills: 'Skills', softSkills: 'Soft Skills', experience: 'Experience', education: 'Education', certifications: 'Certifications' };
+    ? { profile: 'Identité', contact: 'Contact', summary: 'Profil', highlights: 'Points forts', languages: 'Langues', skills: 'Compétences', softSkills: 'Compétences comportementales', experience: 'Expérience', education: 'Formation', certifications: 'Certifications', technology: 'Technology' }
+    : { profile: 'Identity', contact: 'Contact', summary: 'Profile', highlights: 'Highlights', languages: 'Languages', skills: 'Skills', softSkills: 'Soft Skills', experience: 'Experience', education: 'Education', certifications: 'Certifications', technology: 'Technology' };
   const canadaFieldLabels = fr
     ? { name: 'Nom', title: 'Titre professionnel', location: 'Localisation', phone: 'Téléphone', email: 'E-mail', links: 'Liens', education: 'Formation', experience: 'Expérience', skills: 'Compétences', languages: 'Langues' }
     : { name: 'Name', title: 'Professional title', location: 'Location', phone: 'Phone', email: 'Email', links: 'Links', education: 'Education', experience: 'Experience', skills: 'Skills', languages: 'Languages' };
@@ -704,10 +599,9 @@ function CvCustomizer({
   function applyHex() {
     const value = hex.trim();
     if (!HEX_RE.test(value)) return;
-    const full =
-      value.length === 4
-        ? `#${value[1]}${value[1]}${value[2]}${value[2]}${value[3]}${value[3]}`
-        : value;
+    const full = value.length === 4
+      ? `#${value[1]}${value[1]}${value[2]}${value[2]}${value[3]}${value[3]}`
+      : value;
     patch({ accent: full });
     setHex('');
   }
@@ -722,15 +616,16 @@ function CvCustomizer({
           : fr ? 'Enregistrer' : 'Save';
 
   return (
-    <>
+    <div className="cvx-controls">
       <button
         type="button"
         className={`cvx-fab ${open ? 'is-open' : ''}`}
         onClick={onToggle}
-        aria-label={fr ? 'Personnaliser le CV' : 'Customize resume'}
+        aria-label={fr ? 'Paramètres du CV' : 'Resume settings'}
         aria-expanded={open}
       >
         <FontAwesomeIcon icon={['fas', open ? 'xmark' : 'sliders']} />
+        <span>{fr ? 'Paramètres du CV' : 'Resume settings'}</span>
       </button>
       {open && (
         <div className="cvx-panel" role="dialog" aria-label={fr ? 'Personnalisation' : 'Customization'}>
@@ -739,70 +634,51 @@ function CvCustomizer({
             <div className="cvx-row">
               <input
                 type="range"
-                min="0.8"
-                max="1.15"
-                step="0.01"
-                value={settings.fontScale}
-                onChange={(e) => patch({ fontScale: Number(e.target.value) })}
+                min={(baseFontPx * 0.8).toFixed(1)}
+                max={(baseFontPx * 1.15).toFixed(1)}
+                step="0.1"
+                value={(settings.fontScale * baseFontPx).toFixed(1)}
+                aria-label={fr ? 'Taille du texte en pixels' : 'Text size in pixels'}
+                onChange={(e) => patch({ fontScale: Number(e.target.value) / baseFontPx })}
               />
               <span className="cvx-value">
-                {Math.round(settings.fontScale * 100)}% · {isCanada ? `${(settings.fontScale * 10.25).toFixed(1)}pt` : `${(settings.fontScale * BASE_FONT_PX).toFixed(1)}px`}
+                {(settings.fontScale * baseFontPx).toFixed(1)} px
               </span>
             </div>
           </div>
 
-          {isCanada && <div className="cvx-block">
-            <h3 className="cvx-title">{fr ? 'Marges de la page PDF' : 'PDF page margins'}</h3>
-            {[
-              ['top', fr ? 'Haut' : 'Top'],
-              ['right', fr ? 'Droite' : 'Right'],
-              ['bottom', fr ? 'Bas' : 'Bottom'],
-              ['left', fr ? 'Gauche' : 'Left'],
-            ].map(([edge, label]) => (
-              <label className="cvx-margin-control" key={edge}>
-                <span>{label} · {settings.pageMargins[edge]} mm</span>
-                <input
-                  type="range"
-                  min="5"
-                  max="30"
-                  step="1"
-                  value={settings.pageMargins[edge]}
-                  onChange={(event) => setPageMargin(edge, Number(event.target.value))}
-                />
-              </label>
-            ))}
-          </div>}
-
-          {!isCanada && <div className="cvx-block">
-            <h3 className="cvx-title">{fr ? 'Couleur' : 'Color'}</h3>
-            <div className="cvx-swatches">
-              {COLOR_PRESETS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`cvx-swatch ${settings.accent.toLowerCase() === c.toLowerCase() ? 'is-active' : ''}`}
-                  style={{ background: c }}
-                  onClick={() => patch({ accent: c })}
-                  aria-label={c}
-                />
+          {isCanada ? (
+            <div className="cvx-block">
+              <h3 className="cvx-title">{fr ? 'Marges du PDF' : 'PDF margins'}</h3>
+              {[
+                ['top', fr ? 'Haut' : 'Top'],
+                ['right', fr ? 'Droite' : 'Right'],
+                ['bottom', fr ? 'Bas' : 'Bottom'],
+                ['left', fr ? 'Gauche' : 'Left'],
+              ].map(([edge, label]) => (
+                <label className="cvx-margin-control" key={edge}>
+                  <span>{label} · {settings.pageMargins[edge]} mm</span>
+                  <input type="range" min="5" max="30" step="1" value={settings.pageMargins[edge]} onChange={(event) => setPageMargin(edge, Number(event.target.value))} />
+                </label>
               ))}
             </div>
-            <div className="cvx-row">
-              <input
-                className="cvx-input"
-                type="text"
-                value={hex}
-                onChange={(e) => setHex(e.target.value)}
-                placeholder="#1a2b3c"
-              />
-              <button type="button" className="cvx-btn" onClick={applyHex}>
-                {fr ? 'Ajouter' : 'Add'}
-              </button>
+          ) : (
+            <div className="cvx-block">
+              <h3 className="cvx-title">{fr ? 'Couleur principale' : 'Accent color'}</h3>
+              <div className="cvx-swatches">
+                {COLOR_PRESETS.map((color) => (
+                  <button key={color} type="button" className={`cvx-swatch ${settings.accent.toLowerCase() === color.toLowerCase() ? 'is-active' : ''}`} style={{ background: color }} onClick={() => patch({ accent: color })} aria-label={color} />
+                ))}
+              </div>
+              <div className="cvx-row">
+                <input className="cvx-input" type="text" value={hex} onChange={(event) => setHex(event.target.value)} placeholder="#171513" aria-label={fr ? 'Code couleur hexadécimal' : 'Hex color code'} />
+                <button type="button" className="cvx-btn" onClick={applyHex}>{fr ? 'Appliquer' : 'Apply'}</button>
+              </div>
             </div>
-          </div>}
+          )}
 
           <div className="cvx-block">
-            <h3 className="cvx-title">{isCanada ? (fr ? 'Champs affichés' : 'Visible fields') : (fr ? 'Éléments & colonnes' : 'Elements & columns')}</h3>
+            <h3 className="cvx-title">{fr ? 'Sections affichées' : 'Visible sections'}</h3>
             {!isCanada && <label className="cvx-check">
               <input
                 type="checkbox"
@@ -812,16 +688,8 @@ function CvCustomizer({
               <span>{fr ? 'Photo de profil' : 'Profile photo'}</span>
             </label>}
             {!isCanada && <label className="cvx-photo-size">
-              <span>{fr ? 'Taille de la photo' : 'Photo size'} · {settings.photoSize ?? 96}px</span>
-              <input
-                type="range"
-                min="60"
-                max="140"
-                step="1"
-                value={settings.photoSize ?? 96}
-                onChange={(e) => patch({ photoSize: Number(e.target.value) })}
-                disabled={!settings.showImage}
-              />
+              <span>{fr ? 'Taille de la photo' : 'Photo size'} · {settings.photoSize}px</span>
+              <input type="range" min="100" max="240" step="1" value={settings.photoSize} onChange={(event) => patch({ photoSize: Number(event.target.value) })} disabled={!settings.showImage} />
             </label>}
             {(isCanada ? CANADA_FIELD_ORDER : SECTION_ORDER).map((key) => (
               <div className="cvx-section-control" key={key}>
@@ -834,30 +702,20 @@ function CvCustomizer({
                   />
                   <span>{isCanada ? canadaFieldLabels[key] : sectionLabels[key]}</span>
                 </label>
-                {!isCanada && <div className="cvx-seg">
-                  <button
-                    type="button"
-                    className={settings.columns[key] === 'left' ? 'is-active' : ''}
-                    onClick={() => setColumn(key, 'left')}
-                    disabled={!settings.visible[key]}
-                  >
-                    {fr ? 'G' : 'L'}
-                  </button>
-                  <button
-                    type="button"
-                    className={settings.columns[key] === 'right' ? 'is-active' : ''}
-                    onClick={() => setColumn(key, 'right')}
-                    disabled={!settings.visible[key]}
-                  >
-                    {fr ? 'D' : 'R'}
-                  </button>
+                {!isCanada && <div className="cvx-seg" role="group" aria-label={`${sectionLabels[key]} ${fr ? 'colonne' : 'column'}`}>
+                  <button type="button" className={settings.columns[key] === 'left' ? 'is-active' : ''} onClick={() => setColumn(key, 'left')} disabled={!settings.visible[key]}>{fr ? 'Gauche' : 'Left'}</button>
+                  <button type="button" className={settings.columns[key] === 'right' ? 'is-active' : ''} onClick={() => setColumn(key, 'right')} disabled={!settings.visible[key]}>{fr ? 'Droite' : 'Right'}</button>
                 </div>}
               </div>
-              {!isCanada && <label className="cvx-zone-size"><span>{fr ? 'Taille' : 'Size'} {Math.round((settings.sectionScale?.[key] ?? 1) * 100)}% · {((settings.sectionScale?.[key] ?? 1) * settings.fontScale * BASE_FONT_PX).toFixed(1)}px</span><input type="range" min="0.75" max="1.3" step="0.01" value={settings.sectionScale?.[key] ?? 1} onChange={(e) => setSectionScale(key, Number(e.target.value))} /></label>}
+              {!isCanada && <label className="cvx-zone-size">
+                <span>{fr ? 'Taille' : 'Size'} · {(BASE_FONT_PX * settings.fontScale * (settings.sectionScale?.[key] ?? 1)).toFixed(1)} px</span>
+                <input type="range" min={(BASE_FONT_PX * settings.fontScale * 0.75).toFixed(1)} max={(BASE_FONT_PX * settings.fontScale * 1.3).toFixed(1)} step="0.1" value={(BASE_FONT_PX * settings.fontScale * (settings.sectionScale?.[key] ?? 1)).toFixed(1)} aria-label={`${sectionLabels[key]} ${fr ? 'taille en pixels' : 'size in pixels'}`} onChange={(event) => setSectionScale(key, Number(event.target.value) / (BASE_FONT_PX * settings.fontScale))} />
+              </label>}
               </div>
             ))}
           </div>
 
+          {saveState === 'error' && <p className="cvx-error" role="alert">{fr ? 'Les réglages n’ont pas été enregistrés. Vérifiez votre connexion puis réessayez.' : 'Your settings were not saved. Check your connection and try again.'}</p>}
           <div className="cvx-actions">
             <button
               type="button"
@@ -873,7 +731,7 @@ function CvCustomizer({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -897,10 +755,10 @@ function ServiceModal({ title, onClose, children, wide = false }) {
   );
 }
 
-function PromptModal({ locale, resumeData, initialInstructions, onSave, onClose, onCopied }) {
+function PromptModal({ locale, resumeData, initialInstructions, initialJobOffer, onSave, onClose, onCopied }) {
   const fr = locale === 'fr';
   const [instructions, setInstructions] = useState(initialInstructions || DEFAULT_PROMPT_INSTRUCTIONS);
-  const [jobOffer, setJobOffer] = useState('');
+  const [jobOffer, setJobOffer] = useState(initialJobOffer || '');
   const prompt = buildResumePrompt(JSON.stringify(getPromptResume(resumeData), null, 2), jobOffer, instructions);
 
   async function copyPrompt() {
@@ -964,9 +822,10 @@ function PostPasteResumeChoiceModal({ locale, onEditNow, onClose }) {
 
 const BASIC_FIELDS = ['firstName', 'lastName', 'title', 'tagline'];
 
-function ResumeEditorModal({ locale, resumeData, onSave, onReset, onClose, saveState, mode = 'default' }) {
+function ResumeEditorModal({ locale, resumeData, onSave, onReset, onClose, saveState, mode = 'default', application }) {
   const fr = locale === 'fr';
   const [draft, setDraft] = useState(() => JSON.parse(JSON.stringify(resumeData)));
+  const [jobFields, setJobFields] = useState({ title: application?.title ?? '', company: application?.company ?? '' });
   const isApplication = mode === 'application';
   const labels = fr
     ? { firstName: 'Prénom', lastName: 'Nom', title: 'Titre', tagline: 'Accroche', email: 'Email', phone: 'Téléphone', location: 'Localisation' }
@@ -1002,6 +861,10 @@ function ResumeEditorModal({ locale, resumeData, onSave, onReset, onClose, saveS
 
   return (
     <ServiceModal title={isApplication ? (fr ? 'Modifier le CV de cette candidature' : 'Edit this application resume') : (fr ? 'Modifier le CV par défaut' : 'Edit default resume')} onClose={onClose} wide>
+      {isApplication && !application?.id && <div className="service-form-grid">
+        <label className="service-field"><span>{fr ? 'Poste ciblé' : 'Target role'}</span><input value={jobFields.title} onChange={(event) => setJobFields({ ...jobFields, title: event.target.value })} /></label>
+        <label className="service-field"><span>{fr ? 'Entreprise' : 'Company'}</span><input value={jobFields.company} onChange={(event) => setJobFields({ ...jobFields, company: event.target.value })} /></label>
+      </div>}
       <fieldset className="editor-section">
         <legend>{fr ? 'Informations personnelles' : 'Personal information'}</legend>
         <div className="service-form-grid">
@@ -1021,15 +884,16 @@ function ResumeEditorModal({ locale, resumeData, onSave, onReset, onClose, saveS
       {repeatable(fr ? 'Expériences' : 'Experience', 'experience', [{ key: 'role', label: fr ? 'Poste' : 'Role' }, { key: 'company', label: fr ? 'Entreprise' : 'Company' }, { key: 'location', label: fr ? 'Lieu' : 'Location' }, { key: 'period', label: fr ? 'Période' : 'Period' }, { key: 'bullets', label: fr ? 'Missions, une par ligne' : 'Bullets, one per line', list: true }], { role: '', company: '', location: '', period: '', bullets: [] })}
       {repeatable(fr ? 'Formations' : 'Education', 'education', [{ key: 'degree', label: fr ? 'Diplôme' : 'Degree' }, { key: 'school', label: fr ? 'École' : 'School' }, { key: 'location', label: fr ? 'Lieu' : 'Location' }, { key: 'period', label: fr ? 'Période' : 'Period' }], { degree: '', school: '', location: '', period: '' })}
       {repeatable('Certifications', 'certifications', [{ key: 'name', label: fr ? 'Nom' : 'Name' }, { key: 'provider', label: fr ? 'Organisme' : 'Provider' }, { key: 'href', label: 'URL' }], { name: '', provider: '', href: '' })}
+      {saveState === 'error' && <p className="cvx-error" role="alert">{fr ? 'Le CV de cette candidature n’a pas été enregistré. Vérifiez votre connexion puis réessayez.' : 'This application resume was not saved. Check your connection and try again.'}</p>}
       <footer className="service-modal-actions sticky-actions">
         <button type="button" className="cvx-btn" onClick={() => { onReset(); onClose(); }}><FontAwesomeIcon icon={['fas', 'rotate-left']} /> {isApplication ? (fr ? 'Revenir au CV enregistré de la candidature' : 'Restore saved application resume') : (fr ? 'Restaurer le CV original' : 'Restore original resume')}</button>
-        <button type="button" className="cvx-btn cvx-btn--primary" onClick={() => onSave(draft)} disabled={saveState === 'saving'}><FontAwesomeIcon icon={['fas', 'floppy-disk']} /> {saveState === 'saving' ? (fr ? 'Enregistrement…' : 'Saving…') : isApplication ? (fr ? 'Enregistrer ce CV de candidature' : 'Save this application resume') : (fr ? 'Enregistrer comme CV par défaut' : 'Save as default resume')}</button>
+        <button type="button" className="cvx-btn cvx-btn--primary" onClick={() => onSave(draft, jobFields)} disabled={saveState === 'saving' || (isApplication && !application?.id && (!jobFields.title.trim() || !jobFields.company.trim()))}><FontAwesomeIcon icon={['fas', 'floppy-disk']} /> {saveState === 'saving' ? (fr ? 'Enregistrement…' : 'Saving…') : isApplication ? (fr ? 'Enregistrer ce CV de candidature' : 'Save this application resume') : (fr ? 'Enregistrer comme CV par défaut' : 'Save as default resume')}</button>
       </footer>
     </ServiceModal>
   );
 }
 
-function JobInfo({ locale, job, onPrev, onNext, hasResume }) {
+function JobInfo({ locale, job, onPrev, onNext, hasResume, saveError = false }) {
   const fr = locale === 'fr';
   const L = {
     heading: fr ? 'Poste ciblé' : 'Target job',
@@ -1052,6 +916,7 @@ function JobInfo({ locale, job, onPrev, onNext, hasResume }) {
   const scoreTone = !hasScore ? '' : job.matchScore >= 60 ? 'is-ok' : job.matchScore >= 35 ? 'is-warn' : 'is-bad';
   return (
     <section className="jobinfo">
+      {saveError && <p className="jobinfo_error" role="alert">{fr ? 'Le CV n’a pas été enregistré. Vérifiez votre connexion puis réessayez. Vos modifications restent ouvertes.' : 'The resume was not saved. Check your connection and try again. Your edits are still open.'}</p>}
       <header className="jobinfo_head">
         <div className="jobinfo_headings">
           <span className="jobinfo_eyebrow">{L.heading}</span>
@@ -1175,7 +1040,7 @@ function ApplicationPageHeader({ locale, job, format, onFormatChange, onHome, on
         </button>
         <button type="button" className="action_button action_button_primary" onClick={onHome}>
           <FontAwesomeIcon icon={['fas', 'house']} />
-          <span>{locale === 'fr' ? 'Retour au CV par défaut' : 'Back to default resume'}</span>
+          <span>{locale === 'fr' ? 'Retour aux candidatures' : 'Back to applications'}</span>
         </button>
       </div>
     </header>
@@ -1187,13 +1052,13 @@ function AppCustome() {
   const [page, setPage] = useState('cv');
   const [overrides, setOverrides] = useState({});
   const [jsonError, setJsonError] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [openCandidate, setOpenCandidate] = useState(null);
   const [cvSettings, setCvSettings] = useState(defaultCvSettings);
   const [cvPanelOpen, setCvPanelOpen] = useState(false);
   const [resumeEditorOpen, setResumeEditorOpen] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState('');
   const [promptInstructions, setPromptInstructions] = useState(() => localStorage.getItem('resumePromptInstructions') || DEFAULT_PROMPT_INSTRUCTIONS);
   const [cvSaveState, setCvSaveState] = useState('');
   const [activeJob, setActiveJob] = useState(null);
@@ -1203,20 +1068,35 @@ function AppCustome() {
   const [applicationFormat, setApplicationFormat] = useState('cv');
 
   const baseResume = locale === 'fr' ? resumeDataFr : resumeDataEn;
-  const baseCanada = locale === 'fr' ? resumeDataCanadaFr : resumeDataCanadaEn;
+  const baseCanada = baseResume;
   const isApplicationPage = page === 'application';
   const isCanadaView = page === 'canada' || (isApplicationPage && applicationFormat === 'canada');
   const overrideKey = isCanadaView ? `canada-${locale}` : `cv-${locale}`;
   const displayResume = normalizeResumeData(
     baseResume,
-    isApplicationPage ? jobResume ?? baseResume : overrides[`cv-${locale}`] ?? baseResume,
+    isApplicationPage ? jobResume ?? baseResume : baseResume,
   );
   const displayCanada = normalizeResumeData(
     baseCanada,
-    isApplicationPage ? jobResume ?? baseCanada : overrides[`canada-${locale}`] ?? baseCanada,
+    isApplicationPage ? jobResume ?? baseCanada : baseCanada,
   );
 
   const activeData = isCanadaView ? displayCanada : displayResume;
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/applications')
+      .then((response) => (response.ok ? response.json() : []))
+      .then((applications) => {
+        if (active) setJobList(Array.isArray(applications) ? applications : []);
+      })
+      .catch(() => {
+        if (active) setJobList([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
 
   // Update document metadata so the printed PDF gets a meaningful title
   // and keywords (most browsers include the title in PDF metadata).
@@ -1242,20 +1122,9 @@ function AppCustome() {
   function handleDownload() {
     const previousTitle = document.title;
     const format = isCanadaView ? 'Canadian_Resume' : 'Resume';
-    const resumeElement = document.getElementById('area-cv');
-    const a4HeightPx = (297 / 25.4) * 96;
-    const contentHeight = resumeElement?.scrollHeight ?? a4HeightPx;
-    const printScale = Math.min(1, a4HeightPx / contentHeight);
-
-    resumeElement?.style.setProperty('--print-scale', String(printScale));
-    resumeElement?.style.setProperty('--print-width', `${210 / printScale}mm`);
-    resumeElement?.style.setProperty('--print-min-height', `${297 / printScale}mm`);
     document.title = `${activeData.basics.firstName}_${activeData.basics.lastName}_${format}_${locale.toUpperCase()}`;
     window.addEventListener('afterprint', () => {
       document.title = previousTitle;
-      resumeElement?.style.removeProperty('--print-scale');
-      resumeElement?.style.removeProperty('--print-width');
-      resumeElement?.style.removeProperty('--print-min-height');
     }, { once: true });
     window.print();
   }
@@ -1282,63 +1151,47 @@ function AppCustome() {
     setTimeout(() => setJsonError(''), 1500);
   }
 
-  async function handlePaste() {
+  async function handleClipboardPaste() {
+    let text;
     try {
-      const text = await navigator.clipboard.readText();
-      const parsed = JSON.parse(text);
+      text = await navigator.clipboard.readText();
+    } catch {
+      setPasteText('');
+      setPasteOpen(true);
+      return;
+    }
+    setPasteText(text);
+    if (!text.trim()) {
+      setPasteOpen(true);
+      return;
+    }
+    await handlePaste(text);
+  }
+
+  async function handlePaste(text = pasteText) {
+    try {
+      const parsed = JSON.parse(text.trim());
       const source = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
       const { application, ...resume } = source;
       if (!isValidResumeData(resume)) {
-        setJsonError(locale === 'fr' ? 'Format JSON invalide' : 'Invalid JSON format');
+        setJsonError(locale === 'fr' ? 'Ce texte ne ressemble pas à un CV JSON. Copiez le CV complet puis réessayez.' : 'This does not look like resume JSON. Copy the full resume and try again.');
         return;
       }
-      const normalResume = normalizeResumeData(baseResume, resume);
-      const canadianResume = normalizeResumeData(baseCanada, resume);
-      setOverrides((prev) => ({
-        ...prev,
-        [`cv-${locale}`]: normalResume,
-        [`canada-${locale}`]: canadianResume,
-      }));
-      await Promise.all([
-        persistCv(normalResume, `cv-${locale}`),
-        persistCv(canadianResume, `canada-${locale}`),
-      ]);
-
-      const hasAppInfo =
-        application && typeof application === 'object' && application.title && application.company;
-      if (hasAppInfo) {
-        try {
-          const created = await createApplication({
-            title: String(application.title),
-            company: String(application.company),
-            url: application.url ? String(application.url) : '',
-            location: application.location ? String(application.location) : '',
-            contractType: application.contractType ? String(application.contractType) : '',
-            summary: application.summary ? String(application.summary) : '',
-            missions: Array.isArray(application.missions) ? application.missions.map(String) : [],
-            requirements: Array.isArray(application.requirements) ? application.requirements.map(String) : [],
-            jobDescription: application.jobDescription ? String(application.jobDescription) : '',
-            missingProfile: application.missingProfile ? String(application.missingProfile) : '',
-            qualified: application.qualified === true,
-            matchScore: Number.isFinite(Number(application.matchScore)) ? Number(application.matchScore) : null,
-            assessment: application.assessment ? String(application.assessment) : '',
-            status: 'Applied',
-            resumeJson: JSON.stringify(normalResume, null, 2),
-          });
-          setRefreshKey((k) => k + 1);
-          if (created && created.id) {
-            selectJob(created);
-          }
-          setJsonError(locale === 'fr' ? 'CV appliqué et candidature créée !' : 'Resume applied and application created!');
-        } catch {
-          setJsonError(locale === 'fr' ? 'CV appliqué (échec création)' : 'Resume applied (create failed)');
-        }
-      } else {
-        setJsonError('');
+      if (!activeJob) {
+        startApplicationDraft(normalizeResumeData(baseResume, resume), application);
+        setPasteOpen(false);
+        setResumeEditorOpen(true);
+        return;
       }
-      setTimeout(() => setJsonError(''), 2500);
+      const tailoredResume = normalizeResumeData(isCanadaView ? baseCanada : baseResume, resume);
+      const saved = await persistApplicationResume(tailoredResume);
+      if (saved) setPasteOpen(false);
+      setJsonError(saved
+        ? (locale === 'fr' ? 'Le CV de cette candidature a été mis à jour.' : 'This application resume has been updated.')
+        : (locale === 'fr' ? 'Le CV n’a pas été enregistré. Vérifiez la connexion et réessayez.' : 'The resume was not saved. Check your connection and try again.'));
+      setTimeout(() => setJsonError(''), 3500);
     } catch {
-      setJsonError(locale === 'fr' ? 'Format JSON invalide' : 'Invalid JSON format');
+      setJsonError(locale === 'fr' ? 'JSON invalide. Collez uniquement le résultat JSON complet, sans bloc Markdown.' : 'Invalid JSON. Paste only the complete JSON result, without Markdown fences.');
     }
   }
 
@@ -1346,7 +1199,7 @@ function AppCustome() {
   useEffect(() => {
     if (page === 'tracker') return undefined;
     let active = true;
-    const defaults = page === 'canada' ? defaultCanadaSettings : defaultCvSettings;
+    const defaults = isCanadaView ? defaultCanadaSettings : defaultCvSettings;
     setCvSettings(defaults);
     setOverrides((prev) => {
       const next = { ...prev };
@@ -1358,7 +1211,7 @@ function AppCustome() {
       .then((data) => {
         if (!active || !data) return;
         if (data.settings) {
-          setCvSettings(page === 'canada'
+          setCvSettings(isCanadaView
             ? {
                 ...defaultCanadaSettings,
                 ...data.settings,
@@ -1368,7 +1221,9 @@ function AppCustome() {
             : {
                 ...defaultCvSettings,
                 ...data.settings,
-                columns: { ...defaultCvSettings.columns, ...(data.settings.columns ?? {}) },
+                accent: data.settings.accent?.toLowerCase() === '#12467c' ? defaultCvSettings.accent : (data.settings.accent ?? defaultCvSettings.accent),
+                photoSize: data.settings.photoSize === 96 ? defaultCvSettings.photoSize : (data.settings.photoSize ?? defaultCvSettings.photoSize),
+                columns: { ...defaultCvSettings.columns, ...(data.settings.columns ?? {}), contact: 'left' },
                 visible: { ...defaultCvSettings.visible, ...(data.settings.visible ?? {}) },
                 sectionScale: { ...defaultCvSettings.sectionScale, ...(data.settings.sectionScale ?? {}) },
               });
@@ -1381,7 +1236,7 @@ function AppCustome() {
     return () => {
       active = false;
     };
-  }, [overrideKey, page]);
+  }, [overrideKey, page, isCanadaView]);
 
   async function persistCv(resume = overrides[overrideKey] ?? null, targetKey = overrideKey) {
     setCvSaveState('saving');
@@ -1396,7 +1251,6 @@ function AppCustome() {
       setTimeout(() => setCvSaveState(''), 1500);
     } catch {
       setCvSaveState('error');
-      setTimeout(() => setCvSaveState(''), 2000);
     }
   }
 
@@ -1404,15 +1258,16 @@ function AppCustome() {
     persistCv();
   }
 
-  async function persistApplicationResume(resume) {
-    if (!activeJob?.id) return;
+  async function persistApplicationResume(resume, jobFields = {}) {
+    if (!activeJob) return false;
     const fixedResume = normalizeResumeData(isCanadaView ? baseCanada : baseResume, resume);
+    setJobResume(fixedResume);
     setCvSaveState('saving');
     try {
-      const res = await fetch(`/api/applications/${encodeURIComponent(activeJob.id)}`, {
-        method: 'PATCH',
+      const res = await fetch(activeJob.id ? `/api/applications/${encodeURIComponent(activeJob.id)}` : '/api/applications', {
+        method: activeJob.id ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...activeJob, resumeJson: JSON.stringify(fixedResume, null, 2) }),
+        body: JSON.stringify({ ...activeJob, ...(!activeJob.id ? jobFields : {}), resumeJson: JSON.stringify(fixedResume, null, 2) }),
       });
       if (!res.ok) throw new Error('save failed');
       const updated = await res.json();
@@ -1422,9 +1277,10 @@ function AppCustome() {
       setRefreshKey((key) => key + 1);
       setCvSaveState('saved');
       setTimeout(() => setCvSaveState(''), 1500);
+      return true;
     } catch {
       setCvSaveState('error');
-      setTimeout(() => setCvSaveState(''), 2000);
+      return false;
     }
   }
 
@@ -1438,9 +1294,9 @@ function AppCustome() {
     }
   }
 
-  function handleSaveResume(resume) {
+  function handleSaveResume(resume, jobFields) {
     if (activeJob) {
-      persistApplicationResume(resume);
+      persistApplicationResume(resume, jobFields);
       return;
     }
     const fixedResume = normalizeResumeData(isCanadaView ? baseCanada : baseResume, resume);
@@ -1450,7 +1306,7 @@ function AppCustome() {
   }
 
   async function handleResetCv() {
-    const defaults = page === 'canada' ? defaultCanadaSettings : defaultCvSettings;
+    const defaults = isCanadaView ? defaultCanadaSettings : defaultCvSettings;
     setCvSettings(defaults);
     setOverrides((prev) => {
       const next = { ...prev };
@@ -1472,9 +1328,24 @@ function AppCustome() {
     }
   }
 
+  function startApplicationDraft(resume = baseResume, application = {}) {
+    setActiveJob({ ...application, id: null, title: application?.title || resume.basics.title, company: application?.company || '', status: 'Saved' });
+    setJobResume(resume);
+    setCvPanelOpen(false);
+    setCvSaveState('');
+    setApplicationFormat('cv');
+    setPage('application');
+  }
+
+  function openResumeEditor() {
+    if (!activeJob) startApplicationDraft();
+    setResumeEditorOpen(true);
+  }
+
   // Opens an applied job: loads the exact resume that was used and shows its details.
   function selectJob(app) {
     setActiveJob(app);
+    setCvPanelOpen(false);
     let parsed = null;
     try {
       const data = JSON.parse(app.resumeJson || '');
@@ -1486,15 +1357,15 @@ function AppCustome() {
     setApplicationFormat('cv');
     setPage('application');
     setJobDetailsOpen(false);
-    setSidebarOpen(true);
   }
 
-  function clearJob() {
+  function clearJob(nextPage = 'cv') {
     setActiveJob(null);
+    setCvPanelOpen(false);
     setJobResume(null);
     setJobDetailsOpen(false);
     setApplicationFormat('cv');
-    setPage('cv');
+    setPage(nextPage);
   }
 
   function stepJob(delta) {
@@ -1528,23 +1399,6 @@ function AppCustome() {
 
   return (
     <div className="app_frame">
-      <CandidateSidebar
-        locale={locale}
-        open={sidebarOpen}
-        onToggle={() => setSidebarOpen((o) => !o)}
-        refreshKey={refreshKey}
-        activeId={activeJob?.id}
-        onApps={setJobList}
-        onSelect={selectJob}
-      />
-      <FloatingTools
-        locale={locale}
-        page={page}
-        onCopy={handleCopy}
-        onPaste={handlePaste}
-        onCopyPrompt={handleCopyPrompt}
-        onEditResume={() => setResumeEditorOpen(true)}
-      />
       <ActionToast message={jsonError} />
       <main className="l-main bd-container">
         <PageNav
@@ -1566,7 +1420,12 @@ function AppCustome() {
             onDownload={handleDownload}
           />
         )}
-        {page !== 'tracker' && promptOpen && <PromptModal locale={locale} resumeData={baseResume} initialInstructions={promptInstructions} onSave={handleSavePrompt} onClose={() => setPromptOpen(false)} onCopied={(message) => { setJsonError(message); setTimeout(() => setJsonError(''), 1800); }} />}
+        {page !== 'tracker' && <FloatingTools locale={locale} page={page} onCopy={handleCopy} onPaste={handleClipboardPaste} onCopyPrompt={handleCopyPrompt} onEditResume={openResumeEditor} />}
+        {page !== 'tracker' && pasteOpen && <ServiceModal title={locale === 'fr' ? 'Coller JSON' : 'Paste JSON'} onClose={() => setPasteOpen(false)} wide>
+          <label className="service-field"><span>{locale === 'fr' ? 'CV JSON adapté' : 'Tailored resume JSON'}</span><textarea rows="16" value={pasteText} onChange={(event) => setPasteText(event.target.value)} autoFocus /></label>
+          <footer className="service-modal-actions"><button type="button" className="cvx-btn cvx-btn--primary" disabled={!pasteText.trim() || cvSaveState === 'saving'} onClick={() => handlePaste()}>{locale === 'fr' ? 'Utiliser ce CV' : 'Use this resume'}</button></footer>
+        </ServiceModal>}
+        {page !== 'tracker' && promptOpen && <PromptModal locale={locale} resumeData={baseResume} initialInstructions={promptInstructions} initialJobOffer={activeJob?.jobDescription ?? ''} onSave={handleSavePrompt} onClose={() => setPromptOpen(false)} onCopied={(message) => { setJsonError(message); setTimeout(() => setJsonError(''), 1800); }} />}
         {page !== 'tracker' && (
           <CvCustomizer
             locale={locale}
@@ -1604,6 +1463,7 @@ function AppCustome() {
                 locale={locale}
                 job={activeJob}
                 hasResume={!!jobResume}
+                saveError={cvSaveState === 'error'}
                 onPrev={() => stepJob(-1)}
                 onNext={() => stepJob(1)}
               />
@@ -1621,15 +1481,17 @@ function AppCustome() {
                 }}
               >
                 <aside className="resume_left">
-                  {leftSections.map((key) => {
+                  {effectiveSettings.visible.profile && <Home resumeData={displayResume} showImage={effectiveSettings.showImage} />}
+                  {effectiveSettings.visible.profile && <ResumeNameHeader resumeData={displayResume} />}
+                  {leftSections.filter((key) => key !== 'profile').map((key) => {
                     const Section = SECTION_COMPONENTS[key];
-                    return <div className="cv-section-zone" style={{ '--section-scale': effectiveSettings.sectionScale[key] }} key={key}><Section resumeData={displayResume} showImage={effectiveSettings.showImage} /></div>;
+                    return <div className="cv-section-zone" style={{ '--section-scale': effectiveSettings.sectionScale[key] }} key={key}><Section resumeData={displayResume} showImage={effectiveSettings.showImage} column="left" /></div>;
                   })}
                 </aside>
                 <section className="resume_right">
-                  {rightSections.map((key) => {
+                  {rightSections.filter((key) => key !== 'profile').map((key) => {
                     const Section = SECTION_COMPONENTS[key];
-                    return <div className="cv-section-zone" style={{ '--section-scale': effectiveSettings.sectionScale[key] }} key={key}><Section resumeData={displayResume} showImage={effectiveSettings.showImage} /></div>;
+                    return <div className="cv-section-zone" style={{ '--section-scale': effectiveSettings.sectionScale[key] }} key={key}><Section resumeData={displayResume} showImage={effectiveSettings.showImage} column="right" /></div>;
                   })}
                 </section>
               </div>
@@ -1648,6 +1510,7 @@ function AppCustome() {
                     onClose={() => setResumeEditorOpen(false)}
                     saveState={cvSaveState}
                     mode="application"
+                    application={activeJob}
                   />
                 )}
                 <ApplicationPageHeader
@@ -1655,7 +1518,7 @@ function AppCustome() {
                   job={activeJob}
                   format={applicationFormat}
                   onFormatChange={setApplicationFormat}
-                  onHome={clearJob}
+                  onHome={() => clearJob('tracker')}
                   onDetails={() => setJobDetailsOpen(true)}
                 />
                 {jobDetailsOpen && (
@@ -1664,6 +1527,7 @@ function AppCustome() {
                       locale={locale}
                       job={activeJob}
                       hasResume={!!jobResume}
+                      saveError={cvSaveState === 'error'}
                       onPrev={() => stepJob(-1)}
                       onNext={() => stepJob(1)}
                     />
@@ -1684,15 +1548,17 @@ function AppCustome() {
                       }}
                     >
                       <aside className="resume_left">
-                        {leftSections.map((key) => {
+                        {effectiveSettings.visible.profile && <Home resumeData={displayResume} showImage={effectiveSettings.showImage} />}
+                        {effectiveSettings.visible.profile && <ResumeNameHeader resumeData={displayResume} />}
+                        {leftSections.filter((key) => key !== 'profile').map((key) => {
                           const Section = SECTION_COMPONENTS[key];
-                          return <div className="cv-section-zone" style={{ '--section-scale': effectiveSettings.sectionScale[key] }} key={key}><Section resumeData={displayResume} showImage={effectiveSettings.showImage} /></div>;
+                          return <div className="cv-section-zone" style={{ '--section-scale': effectiveSettings.sectionScale[key] }} key={key}><Section resumeData={displayResume} showImage={effectiveSettings.showImage} column="left" /></div>;
                         })}
                       </aside>
                       <section className="resume_right">
-                        {rightSections.map((key) => {
+                        {rightSections.filter((key) => key !== 'profile').map((key) => {
                           const Section = SECTION_COMPONENTS[key];
-                          return <div className="cv-section-zone" style={{ '--section-scale': effectiveSettings.sectionScale[key] }} key={key}><Section resumeData={displayResume} showImage={effectiveSettings.showImage} /></div>;
+                          return <div className="cv-section-zone" style={{ '--section-scale': effectiveSettings.sectionScale[key] }} key={key}><Section resumeData={displayResume} showImage={effectiveSettings.showImage} column="right" /></div>;
                         })}
                       </section>
                     </div>
@@ -1703,14 +1569,11 @@ function AppCustome() {
               <p className="application-empty">{locale === 'fr' ? 'Sélectionnez une candidature.' : 'Select an application.'}</p>
             )}
           </section>
-        ) : page === 'canada' ? (
-          <CanadianCV resumeData={displayCanada} locale={locale} settings={effectiveSettings} />
         ) : (
           <ApplicationTracker
             locale={locale}
+            defaultResume={baseResume}
             refreshKey={refreshKey}
-            openCandidate={openCandidate}
-            onConsumeOpen={() => setOpenCandidate(null)}
             onOpenApplication={selectJob}
           />
         )}

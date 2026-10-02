@@ -1,133 +1,135 @@
 {
-  "basics": {
-    "firstName": "Habibe",
-    "lastName": "Kairhani",
-    "title": "HR Assistant",
-    "tagline": "",
-    "summary": "Driven by the desire to place people at the heart of the company, I offer a comprehensive HR approach, supported by my mastery of labor law and great adaptability. My goal is to commit to your side in a permanent contract (CDI) to support your development, providing daily HR management that is reliable, practical, and attentive to the teams.",
-    "location": "Paris, France",
-    "phone": "+33 7 65 19 10 92",
-    "email": "kairhanihabibe@gmail.com"
+  "labels": {
+    "profile": "Profile",
+    "summary": "About me",
+    "languages": "Languages",
+    "skills": "Skills",
+    "technology": "Technology",
+    "softSkills": "Soft skills",
+    "experience": "Professional experience",
+    "education": "Education",
+    "certifications": "Certifications"
   },
-  "links": [
-    {
-      "label": "LinkedIn",
-      "value": "/in/habibe-kairhani",
-      "href": "https://www.linkedin.com/in/habibe-kairhani",
-      "icon": "linkedin"
-    }
-  ],
+  "basics": {
+    "firstName": "Jihane",
+    "lastName": "TIOUTIOU",
+    "title": "Senior Marketing & CRM Specialist",
+    "tagline": "Brand strategy, digital marketing and customer loyalty",
+    "summary": "Experienced marketing specialist passionate about brand strategy, digital marketing and customer loyalty. With international experience across Europe and the Middle East, I excel at designing and managing multichannel campaigns that deliver measurable growth. I bring strategic vision, rigorous execution and a results-oriented approach to turn business objectives into concrete, impactful marketing actions.",
+    "location": "Paris, France",
+    "phone": "0788193524",
+    "email": "jihanetioutiou@gmail.com"
+  },
+  "links": [],
   "languages": [
-    {
-      "name": "French",
-      "level": "Fluent"
-    },
-    {
-      "name": "English",
-      "level": "Intermediate"
-    }
+    { "name": "French", "level": "Fluent (C1)" },
+    { "name": "Arabic", "level": "Native" },
+    { "name": "English", "level": "Fluent (C1)" }
   ],
   "skillGroups": [
     {
-      "title": "HR Administration & Payroll",
+      "title": "Core skills",
       "items": [
-        "Personnel Administration",
-        "Variable Pay Elements (EVP) Entry",
-        "Leave and Absence Management",
-        "Onboarding Formalities"
+        "Strategy & brand",
+        "Digital communication & CRM",
+        "Communication & influence",
+        "Project management",
+        "Leadership & cross-functional coordination"
       ]
     },
     {
-      "title": "Training & Coordination",
+      "title": "Technology",
       "items": [
-        "Training Management",
-        "Apprenticeship and Internship Coordination",
-        "Digital Archiving"
-      ]
-    },
-    {
-      "title": "HR Reporting",
-      "items": [
-        "HR Indicators Creation",
-        "Reporting and Decision Support"
-      ]
-    },
-    {
-      "title": "IT Tools",
-      "items": [
-        "Pack Office (Excel, Word)",
-        "SILAE",
-        "Power BI",
-        "HR Access",
-        "SharePoint",
-        "Demande RH"
+        "Salesforce",
+        "Google Analytics",
+        "Greyferret",
+        "Meta Business Suite",
+        "Microsoft Office",
+        "Social media platforms"
       ]
     }
   ],
-  "softSkills": [
-    "Teamwork",
-    "Interpersonal Skills",
-    "Rigor",
-    "Adaptability",
-    "Listening Skills"
-  ],
+  "softSkills": [],
   "highlights": [],
   "experience": [
     {
-      "role": "HR Assistant Manager",
-      "company": "SNCF Voyageurs",
-      "location": "Pantin, France",
-      "period": "Sep 2024 - Present",
-      "bullets": [
-        "Comprehensive administrative management of training actions: planning, tracking, and updating files.",
-        "Steering and coordination of apprenticeships and internships, from integration to administrative follow-up.",
-        "Participation in the operational steering of HR activities in line with the company's strategy.",
-        "Implementation and management of digital archiving of certificates and training documents.",
-        "Rigorous tracking of staff leave, absences, and attendance, in liaison with the manager.",
-        "Creation, analysis, and tracking of HR indicators for reporting and decision support.",
-        "Collection, entry, and verification of variable pay elements (hours, absences, bonuses, leave).",
-        "Processing of individual requests relating to remuneration and social benefits."
-      ]
-    },
-    {
-      "role": "Payroll Administrator",
-      "company": "GDL Expertise",
+      "role": "Senior Marketing & CRM Specialist, France and Benelux",
+      "company": "Western Union",
       "location": "Paris, France",
-      "period": "May 2024 - Jul 2024",
+      "period": "June 2023 - July 2025",
       "bullets": [
-        "Monthly collection, entry, and verification of Variable Pay Elements (EVP).",
-        "Tracking of working hours and processing of absences (paid leave, RTT, sick leave).",
-        "Management of onboarding formalities: declarations of employment (DPAE) and affiliations (health insurance, provident insurance)."
+        "Developed and implemented regional marketing strategies across France and Benelux (3,047 retail locations, $7B annual revenue).",
+        "Deployed regional CRM strategies that increased customer engagement by 15%.",
+        "Managed end-to-end CRM campaigns: briefing, execution, optimization and reporting.",
+        "Coordinated with global brand, product, legal and media teams to maximize campaign impact.",
+        "Translated business objectives into customer-focused marketing actions that generated engagement and loyalty.",
+        "Identified growth opportunities that strengthened Western Union’s market-leading position."
       ]
     },
     {
-      "role": "Customer Advisor",
-      "company": "Webhelp Call Center",
-      "location": "Fez, Morocco",
-      "period": "Sep 2022 - Aug 2023",
+      "role": "Senior Marketing Executive",
+      "company": "Mikyajy",
+      "location": "Jeddah, Saudi Arabia",
+      "period": "March 2020 - March 2023",
       "bullets": [
-        "Welcoming and responding to customers by phone, email, and messaging.",
-        "Providing clear and precise information on products and services.",
-        "Quick management and resolution of customer complaints.",
-        "Tracking of customer files and updating databases.",
-        "Coordination with internal teams to handle complex requests.",
-        "Meeting performance objectives and quality standards."
+        "Led marketing operations for a leading Middle Eastern cosmetics brand (127 stores, $24.9M revenue).",
+        "Launched integrated campaigns that doubled year-over-year sales.",
+        "Created media kits and worked with PR agencies to generate record coverage.",
+        "Conducted strategic market analysis to identify new business opportunities."
+      ]
+    },
+    {
+      "role": "Digital Marketing Executive",
+      "company": "Jacqueline Riu",
+      "location": "Jeddah, Saudi Arabia",
+      "period": "June 2018 - March 2020",
+      "bullets": [
+        "Managed digital engagement and improved user experience across multiple platforms.",
+        "Consistently achieved campaign KPIs while improving customer experience.",
+        "Named Employee of the Year for exceptional performance."
+      ]
+    },
+    {
+      "role": "Digital Marketing Executive",
+      "company": "Oneders",
+      "location": "Jeddah, Saudi Arabia",
+      "period": "June 2017 - June 2018",
+      "bullets": [
+        "Developed and executed digital strategies for luxury brands (Rolls-Royce, BMW, Jaguar and Mini).",
+        "Strengthened digital visibility and engagement for premium automotive brands."
+      ]
+    },
+    {
+      "role": "Social Media Manager",
+      "company": "Promopower",
+      "location": "Jeddah, Saudi Arabia",
+      "period": "January 2016 - March 2017",
+      "bullets": [
+        "Managed social media for major accounts (Nesma Holding, Nesma Airlines and Saudi National Bank).",
+        "Built and grew digital communities, strengthening brand visibility and loyalty."
       ]
     }
   ],
   "education": [
     {
-      "degree": "Master in Human Resources Management",
-      "school": "ISCG Business School",
-      "location": "Paris, France",
-      "period": "Oct 2024 - Jul 2026"
+      "degree": "Master’s in Marketing & Management",
+      "school": "Jean Monnet University",
+      "location": "Saint-Étienne, France",
+      "period": "2012 - 2014"
     },
     {
-      "degree": "Bachelor in Applied Management for Humanities and Social Sciences",
-      "school": "University Toulouse Jean-Jaurès",
-      "location": "Toulouse, France",
-      "period": "Sep 2023 - Jun 2024"
+      "degree": "Bachelor of Business Administration",
+      "school": "University of Chicoutimi",
+      "location": "Quebec, Canada",
+      "period": "2009 - 2012"
     }
   ],
-  "certifications": []
+  "certifications": [
+    { "name": "Sales & Marketing" },
+    { "name": "Professional Marketing" },
+    { "name": "Stress Management" },
+    { "name": "Customer Relations" },
+    { "name": "Administrative Management" },
+    { "name": "Hotel Management" }
+  ]
 }

@@ -1,142 +1,135 @@
 {
   "labels": {
     "profile": "Profil",
+    "summary": "À propos de moi",
     "languages": "Langues",
-    "skills": "Compétences clés",
+    "skills": "Compétences",
+    "technology": "Technology",
     "softSkills": "Compétences comportementales",
-    "experience": "Expériences",
+    "experience": "Expérience professionnelle",
     "education": "Formation",
     "certifications": "Certifications"
   },
   "basics": {
-    "firstName": "Habibe",
-    "lastName": "Kairhani",
-    "title": "Assistant RH",
-    "tagline": "Gestion RH quotidienne fiable, concrète et à l'écoute des équipes",
-    "summary": "Animé par la volonté de placer l'humain au cœur de l'entreprise, je propose une approche RH globale, soutenue par ma maîtrise du droit social et ma grande adaptabilité. Mon objectif est de m'engager à vos côtés dans le cadre d'un CDI pour soutenir votre développement, en vous apportant une gestion RH quotidienne qui soit à la fois fiable, concrète et à l'écoute des équipes.",
-    "location": "Paris, France (Mobile)",
-    "phone": "+33 7 65 19 10 92",
-    "email": "kairhanihabibe@gmail.com"
+    "firstName": "Jihane",
+    "lastName": "TIOUTIOU",
+    "title": "Senior marketing & CRM spécialiste",
+    "tagline": "Stratégie de marque, marketing digital et fidélisation client",
+    "summary": "Spécialiste marketing expérimentée, passionnée par la stratégie de marque, le digital et la fidélisation client. Forte d’une expérience internationale en Europe et au Moyen-Orient, j’excelle dans la conception et le pilotage de campagnes multicanales générant une croissance mesurable. J’apporte une vision stratégique, une exécution rigoureuse et une approche orientée résultats pour transformer les objectifs business en actions marketing concrètes et impactantes.",
+    "location": "Paris, France",
+    "phone": "0788193524",
+    "email": "jihanetioutiou@gmail.com"
   },
-  "links": [
-    {
-      "label": "LinkedIn",
-      "value": "/in/habibe-kairhani",
-      "href": "https://www.linkedin.com/in/habibe-kairhani",
-      "icon": "linkedin"
-    }
-  ],
+  "links": [],
   "languages": [
-    {
-      "name": "Français",
-      "level": "Courant"
-    },
-    {
-      "name": "Anglais",
-      "level": "Intermédiaire"
-    }
+    { "name": "Français", "level": "Courant (C1)" },
+    { "name": "Arabe", "level": "Langue maternelle" },
+    { "name": "Anglais", "level": "Courant (C1)" }
   ],
   "skillGroups": [
     {
-      "title": "Gestion administrative et Paie",
+      "title": "Compétences",
       "items": [
-        "Administration du personnel",
-        "Saisie et vérification des Éléments Variables de Paie (EVP)",
-        "Gestion des congés, absences et présences",
-        "Formalités d'intégration (DPAE, mutuelle, prévoyance)"
+        "Stratégie & marque",
+        "Communication digitale & CRM",
+        "Communication & influence",
+        "Pilotage de projets",
+        "Leadership & coordination inter-équipes"
       ]
     },
     {
-      "title": "Pilotage de la formation",
+      "title": "Technology",
       "items": [
-        "Planification et suivi des actions de formation",
-        "Coordination de l'alternance et des stagiaires",
-        "Archivage numérique des attestations et documents"
-      ]
-    },
-    {
-      "title": "Reporting et Analyse",
-      "items": [
-        "Création et suivi d'indicateurs RH",
-        "Reporting et aide à la décision"
-      ]
-    },
-    {
-      "title": "Outils Informatiques",
-      "items": [
-        "Pack Office (Excel, Word...)",
-        "SILAE",
-        "Power BI",
-        "HR Access",
-        "SharePoint",
-        "Demande RH"
+        "Salesforce",
+        "Google Analytics",
+        "Greyferret",
+        "Meta Business Suite",
+        "Microsoft Office",
+        "Social Media Platforms"
       ]
     }
   ],
-  "softSkills": [
-    "Esprit d'équipe",
-    "Sens du relationnel",
-    "Rigueur",
-    "Adaptabilité",
-    "Écoute des équipes"
-  ],
+  "softSkills": [],
   "highlights": [],
   "experience": [
     {
-      "role": "Assistant Manager RH",
-      "company": "SNCF Voyageurs",
-      "location": "Pantin, France",
-      "period": "Septembre 2024 - Actuel",
-      "bullets": [
-        "Gestion administrative complète des actions de formation : planification, suivi et mise à jour des dossiers.",
-        "Pilotage et coordination de l’alternance et des stagiaires, de l’intégration jusqu’au suivi administratif.",
-        "Participation au pilotage opérationnel des activités RH en lien avec la stratégie de l’entreprise.",
-        "Mise en place et gestion de l’archivage numérique des attestations et documents de formation.",
-        "Suivi rigoureux des congés, absences et présences du personnel, en lien avec le responsable.",
-        "Création, analyse et suivi d’indicateurs RH pour le reporting et l’aide à la décision.",
-        "Collecte, saisie et vérification des éléments variables de paie (heures, absences, primes, congés).",
-        "Traitement des requêtes individuelles relatives à la rémunération et aux avantages sociaux."
-      ]
-    },
-    {
-      "role": "Gestionnaire de Paie",
-      "company": "GDL Expertise",
+      "role": "Senior marketing & CRM spécialiste, France et Benelux",
+      "company": "Western Union",
       "location": "Paris, France",
-      "period": "Mai 2024 - Juillet 2024",
+      "period": "Juin 2023 - Juillet 2025",
       "bullets": [
-        "Collecte, saisie et vérification mensuelle des Éléments Variables de Paie (EVP).",
-        "Suivi des temps de travail et traitement des absences (CP, RTT, arrêts maladie).",
-        "Gestion des formalités d'intégration : déclarations d'embauche (DPAE) et affiliations (mutuelle, prévoyance)."
+        "Élaboration et mise en œuvre de stratégies marketing régionales sur les marchés France et Benelux (3 047 points de vente, 7 Mds $ de chiffre d’affaires annuel).",
+        "Déploiement de stratégies CRM régionales ayant augmenté l’engagement client de 15 %.",
+        "Gestion complète de campagnes CRM : brief, exécution, optimisation et reporting.",
+        "Coordination avec les équipes globales (marque, produit, juridique, média) pour maximiser l’impact des actions.",
+        "Transformation des objectifs business en actions marketing centrées client, générant engagement et fidélité.",
+        "Identification de leviers de croissance renforçant la position de leader de Western Union."
       ]
     },
     {
-      "role": "Conseiller Client",
-      "company": "Centre d’appel Webhelp",
-      "location": "Fès, Maroc",
-      "period": "Septembre 2022 - Août 2023",
+      "role": "Senior marketing executive",
+      "company": "Mikyajy",
+      "location": "Jeddah, Arabie saoudite",
+      "period": "Mars 2020 - Mars 2023",
       "bullets": [
-        "Accueil et réponse aux clients par téléphone, e-mail et messagerie.",
-        "Information claire et précise sur les produits et services.",
-        "Gestion et résolution rapide des réclamations clients.",
-        "Suivi des dossiers clients et mise à jour des bases de données.",
-        "Coordination avec les équipes internes pour traiter les demandes complexes.",
-        "Respect des objectifs de performance et des standards qualité."
+        "Pilotage des opérations marketing du leader cosmétique au Moyen-Orient (127 magasins, 24,9 M $ de chiffre d’affaires).",
+        "Lancement de campagnes intégrées ayant doublé les ventes d’une année sur l’autre.",
+        "Création de kits médias et collaboration avec des agences RP, générant une couverture record.",
+        "Réalisation d’analyses de marché stratégiques pour identifier de nouvelles opportunités business."
+      ]
+    },
+    {
+      "role": "Digital marketing executive",
+      "company": "Jacqueline Riu",
+      "location": "Jeddah, Arabie saoudite",
+      "period": "Juin 2018 - Mars 2020",
+      "bullets": [
+        "Gestion de l’engagement digital et amélioration de l’expérience utilisateur sur plusieurs plateformes.",
+        "Atteinte systématique des KPI de campagnes tout en améliorant l’expérience client.",
+        "Élue « Employée de l’année » pour performance exceptionnelle."
+      ]
+    },
+    {
+      "role": "Digital marketing executive",
+      "company": "Oneders",
+      "location": "Jeddah, Arabie saoudite",
+      "period": "Juin 2017 - Juin 2018",
+      "bullets": [
+        "Développement et exécution de stratégies digitales pour des marques de luxe (Rolls-Royce, BMW, Jaguar, Mini).",
+        "Renforcement de la visibilité digitale et de l’engagement pour des marques automobiles premium."
+      ]
+    },
+    {
+      "role": "Social media manager",
+      "company": "Promopower",
+      "location": "Jeddah, Arabie saoudite",
+      "period": "Janvier 2016 - Mars 2017",
+      "bullets": [
+        "Gestion des réseaux sociaux de grands comptes (Nesma Holding, Nesma Airlines, Saudi National Bank).",
+        "Animation et développement de communautés digitales renforçant visibilité et fidélité de marque."
       ]
     }
   ],
   "education": [
     {
-      "degree": "Master Directeur des Ressources Humaines",
-      "school": "Ecole de Commerce ISCG",
-      "location": "Paris, France",
-      "period": "Octobre 2024 - Juillet 2026"
+      "degree": "Master Marketing & Management",
+      "school": "Université Jean Monnet",
+      "location": "Saint-Étienne, France",
+      "period": "2012 - 2014"
     },
     {
-      "degree": "Licence Gestion Appliquée aux Sciences Humaines et Sociales",
-      "school": "Université Toulouse Jean-Jaurès",
-      "location": "Toulouse, France",
-      "period": "Septembre 2023 - Juin 2024"
+      "degree": "Bachelor en Administration des Affaires",
+      "school": "Université de Chicoutimi",
+      "location": "Québec, Canada",
+      "period": "2009 - 2012"
     }
   ],
-  "certifications": []
+  "certifications": [
+    { "name": "Sales & Marketing" },
+    { "name": "Marketing professionnel" },
+    { "name": "Gestion du stress" },
+    { "name": "Relation client" },
+    { "name": "Gestion administrative" },
+    { "name": "Management hôtelier" }
+  ]
 }
